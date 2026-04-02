@@ -50,22 +50,30 @@ export default function AdminPage() {
   const players: any[] = dashData?.players ?? [];
   const todaysPicks: any[] = dashData?.todaysPicks ?? [];
 
-  // ─── Auto-login on mount ────────────────────────────────────────────
+  // ─── Auto-login on mount (seed first, then login) ─────────────────
   if (!autoLoginDone) {
     setAutoLoginDone(true);
-    adminFetch("/api/admin/login", "POST", { username: "admin", password: "rodh" })
-      .then((data) => {
-        setAdminToken(data.token);
-        setAdminUsername(data.username);
-      })
-      .catch(() => {
-        // Try fallback seed password
-        adminFetch("/api/admin/login", "POST", { username: "admin", password: "survivor2026" })
+    // Step 1: Seed admin user (idempotent — safe to call every time)
+    adminFetch("/api/admin/seed", "POST")
+      .catch(() => {}) // ignore if seed fails
+      .finally(() => {
+        // Step 2: Try login with current password
+        adminFetch("/api/admin/login", "POST", { username: "admin", password: "rodh" })
           .then((data) => {
             setAdminToken(data.token);
             setAdminUsername(data.username);
           })
-          .catch(() => {});
+          .catch(() => {
+            // Fallback password
+            adminFetch("/api/admin/login", "POST", { username: "admin", password: "survivor2026" })
+              .then((data) => {
+                setAdminToken(data.token);
+                setAdminUsername(data.username);
+              })
+              .catch(() => {
+                setAdminUsername("error");
+              });
+          });
       });
   }
 
@@ -145,7 +153,20 @@ export default function AdminPage() {
           </h1>
         </div>
         <div className="flex-1 flex items-center justify-center px-6 py-12">
-          <p className="text-gray-400 text-sm">Loading admin panel...</p>
+          {adminUsername === "error" ? (
+            <div className="text-center">
+              <p className="text-red-500 text-sm font-semibold mb-2">Could not connect to server</p>
+              <p className="text-gray-400 text-xs mb-4">Make sure the backend is running.</p>
+              <button
+                onClick={() => { setAutoLoginDone(false); setAdminUsername(""); }}
+                className="px-4 py-2 bg-gray-900 text-white text-sm rounded-xl"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm">Loading admin panel...</p>
+          )}
         </div>
       </div>
     );
