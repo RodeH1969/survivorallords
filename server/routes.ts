@@ -1263,7 +1263,7 @@ export async function registerRoutes(
     // Seed admin user if not exists
     const existingAdmin = await storage.getAdminByUsername("admin");
     if (!existingAdmin) {
-      await storage.createAdmin({ username: "admin", password: "survivor2026" });
+      await storage.createAdmin({ username: "admin", password: "rodh" });
     }
 
     // Seed season 1 if no seasons exist
@@ -1308,7 +1308,7 @@ export async function registerRoutes(
 
     res.json({
       message: "Seed complete",
-      admin: { username: "admin", password: "survivor2026" },
+      admin: { username: "admin", password: "rodh" },
     });
   });
 

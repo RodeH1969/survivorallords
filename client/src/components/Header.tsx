@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LogOut } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import logoPath from "@assets/logo.jpg";
 
@@ -36,38 +36,48 @@ export default function Header() {
         </Link>
 
         {/* Actions */}
-        {isLoggedIn ? (
-          <div className="flex items-center gap-3">
-            <span className="text-green-100 text-sm hidden sm:block">
-              {player?.displayName}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-sm px-3 py-1.5 rounded-full transition-colors"
-              data-testid="button-logout"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Log out</span>
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="text-white/80 hover:text-white text-sm transition-colors"
-              data-testid="link-login"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/register"
-              className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold text-sm px-3 py-1.5 rounded-full transition-colors"
-              data-testid="link-register"
-            >
-              Register
-            </Link>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isLoggedIn ? (
+            <>
+              <span className="text-green-100 text-sm hidden sm:block">
+                {player?.displayName}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-sm px-3 py-1.5 rounded-full transition-colors"
+                data-testid="button-logout"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Log out</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-white/80 hover:text-white text-sm transition-colors"
+                data-testid="link-login"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold text-sm px-3 py-1.5 rounded-full transition-colors"
+                data-testid="link-register"
+              >
+                Register
+              </Link>
+            </>
+          )}
+          <Link
+            href="/admin"
+            className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-xs px-2.5 py-1.5 rounded-full transition-colors"
+            data-testid="link-admin"
+          >
+            <Shield className="h-3 w-3" />
+            <span className="hidden sm:inline">Admin</span>
+          </Link>
+        </div>
       </div>
     </header>
   );
