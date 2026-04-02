@@ -29,15 +29,10 @@ export default function AdminPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  // Admin auth state (React state only — no localStorage)
+  // Admin auth — auto-login, no password screen
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [adminUsername, setAdminUsername] = useState("");
-
-  // Login form state
-  const [loginUsername, setLoginUsername] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loggingIn, setLoggingIn] = useState(false);
+  const [autoLoginDone, setAutoLoginDone] = useState(false);
 
   // Process results state
   const [stockResults, setStockResults] = useState<StockResult[]>([]);
@@ -55,25 +50,24 @@ export default function AdminPage() {
   const players: any[] = dashData?.players ?? [];
   const todaysPicks: any[] = dashData?.todaysPicks ?? [];
 
-  // ─── Login ───────────────────────────────────────────────────────────
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-    setLoggingIn(true);
-    try {
-      const data = await adminFetch("/api/admin/login", "POST", {
-        username: loginUsername,
-        password: loginPassword,
+  // ─── Auto-login on mount ────────────────────────────────────────────
+  if (!autoLoginDone) {
+    setAutoLoginDone(true);
+    adminFetch("/api/admin/login", "POST", { username: "admin", password: "rodh" })
+      .then((data) => {
+        setAdminToken(data.token);
+        setAdminUsername(data.username);
+      })
+      .catch(() => {
+        // Try fallback seed password
+        adminFetch("/api/admin/login", "POST", { username: "admin", password: "survivor2026" })
+          .then((data) => {
+            setAdminToken(data.token);
+            setAdminUsername(data.username);
+          })
+          .catch(() => {});
       });
-      setAdminToken(data.token);
-      setAdminUsername(data.username);
-      toast({ title: "Admin logged in ✅" });
-    } catch (err: any) {
-      setLoginError(err.message ?? "Login failed");
-    } finally {
-      setLoggingIn(false);
-    }
-  };
+  }
 
   // ─── Admin actions ────────────────────────────────────────────────────
   const runAction = async (label: string, fn: () => Promise<any>) => {
@@ -134,7 +128,7 @@ export default function AdminPage() {
     setStockResults(codes.map((code) => ({ stockCode: code, closingPercent: "" })));
   };
 
-  // ─── Not logged in ────────────────────────────────────────────────────
+  // ─── Loading / not logged in ────────────────────────────────────────
   if (!adminToken) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -151,59 +145,7 @@ export default function AdminPage() {
           </h1>
         </div>
         <div className="flex-1 flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-sm">
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-6 py-8">
-              <h2
-                className="text-xl font-bold text-gray-900 mb-6 text-center"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                ADMIN LOGIN
-              </h2>
-              <form onSubmit={handleLogin} className="space-y-4" data-testid="admin-login-form">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
-                  <input
-                    type="text"
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    placeholder="admin"
-                    data-testid="input-admin-username"
-                    autoComplete="username"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                  <input
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    placeholder="••••••••"
-                    data-testid="input-admin-password"
-                    autoComplete="current-password"
-                  />
-                </div>
-                {loginError && (
-                  <div className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 border border-red-200" data-testid="admin-login-error">
-                    {loginError}
-                  </div>
-                )}
-                <button
-                  type="submit"
-                  disabled={loggingIn}
-                  className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-50 transition-all"
-                  style={{ backgroundColor: "#1a1a1a" }}
-                  data-testid="button-admin-login"
-                >
-                  {loggingIn ? "Logging in..." : "LOG IN"}
-                </button>
-              </form>
-              <p className="text-xs text-gray-400 text-center mt-4">
-                Default: admin / survivor2026 (after seeding)
-              </p>
-            </div>
-          </div>
+          <p className="text-gray-400 text-sm">Loading admin panel...</p>
         </div>
       </div>
     );
